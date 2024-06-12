@@ -77,14 +77,15 @@ if __name__ == '__main__':
     #End-for
     game_over = False
     while not game_over:
-          
+        
+        usr_evt_flag = False
         for ev in pygame.event.get(): 
               
             if ev.type == pygame.QUIT: game_over = True
             
             match ev.type:
                 case pygame.USEREVENT:
-                    if utils.blocked: Turret.sp_grp.update()
+                    if usr_evt_flag or bool(utils.blocked): Turret.sp_grp.update()
                     else:
                         Turret.sp_grp.update([tgt.tgt_data for tgt in (Turret.sp_grp.sprites() + Enemy.sp_grp.sprites() )])
                         all_base_sprites.update(screen.get_rect() )
@@ -94,6 +95,7 @@ if __name__ == '__main__':
                             if enemy_wave: curr_enemy = enemy_wave.pop(0)
                             else:          curr_enemy = [-1, '']
                         #End-if
+                        usr_evt_flag = True
                     #End-if
                 #End-case
             #End-match
@@ -120,13 +122,18 @@ if __name__ == '__main__':
         pygame.display.flip()
         
         if not (bool(enemy_wave) or bool(Enemy.sp_grp.sprites() ) ):
+            oukd    = max([twr.overutilization for twr in Turret.sp_grp.sprites()])
+            tot_pkd = float(5*Enemy.killed - PLAYER_BASE.damage - 10*num_twr)
+            if tot_pkd > 0: tot_pkd *= 1 - oukd
+            
             game_over       = True
             final_score_msg = f'''
             Towers Deployed:        {num_twr}
             Enemies neutralized:    {Enemy.killed}
             Enemies survided:       {PLAYER_BASE.damage}
+            Max Overutilization:    {oukd}
             --------------------------------
-            FINAL SCORE:            {5*Enemy.killed - PLAYER_BASE.damage - 10*num_twr}
+            FINAL SCORE:            {tot_pkd}
             '''
         #End-if
     #End-while

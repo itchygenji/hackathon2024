@@ -83,6 +83,9 @@ class Turret(TgtSprite):
         self.ticks_since_last_user_update = randrange(self.UPDATE_FACTOR)
         self.round_load                   = 1
         self.cb_q                         = []
+        self.waiting_for_tfunc            = False
+        self.overrun_ctr                  = 0.0
+        self.update_ctr                   = 0.0
     #End-def
     
     # TODO: Need to figure out why this does not line up with the barrel
@@ -91,14 +94,19 @@ class Turret(TgtSprite):
     def update(self, all_tgts : Union[List[Tuple], None] = None):
         if all_tgts:
             if self.cb_q:
-                self.target_dir, self.fire, in_rad = self.cb_q.pop(0)
+                self.target_dir, self.fire, in_rad, self.waiting_for_tfunc = self.cb_q.pop(0)
                 if isnan(self.target_dir):  self.target_dir = self.current_dir
                 elif in_rad:                self.target_dir = degrees(self.target_dir)
                 self.target_dir = utils.ang_mod(self.target_dir)
             #End-if
             
             dir_error = utils.ang_mod(self.target_dir - self.current_dir)
-            if self.ticks_since_last_user_update == 0: utils.twr_func_sched(self, self.tgt_data[1], self.tag, all_tgts, self.fire, self.current_dir, self.target_dir)
+            if self.ticks_since_last_user_update == 0:
+                self.update_ctr += 1
+                if self.waiting_for_tfunc:  self.overrun_ctr += 1
+                else:                       utils.twr_func_sched(self, self.tgt_data[1], self.tag, all_tgts, self.fire, self.current_dir, self.target_dir)
+                self.waiting_for_tfunc  = True
+            #End-if
             self.ticks_since_last_user_update += 1
             self.ticks_since_last_user_update %= self.UPDATE_FACTOR
             
@@ -122,9 +130,9 @@ class Turret(TgtSprite):
             #End-if
             if self.round_load < 1: self.round_load += self.rpt
         elif self in utils.curr_proc:
-            num_delay = len(self.cb_delay)
+            num_delay = len(self.cb_q)
             if num_delay > self.UPDATE_FACTOR: print(f'Warning: twr_func call for {self.tag} is overruning by {num_delay} frames ...')
-            self.cb_delay += [(self.target_dir, self.fire, False)]
+            self.cb_delay += [(self.target_dir, self.fire, False, self.waiting_for_tfunc)]
         #End-if
     #End-def
     
@@ -132,7 +140,7 @@ class Turret(TgtSprite):
         nxt_tgt_dir = args[0]
         if args[-1]: nxt_tgt_dir = degrees(nxt_tgt_dir)
         if args[0] == None: print(f'CRASH: Null direction detected: {args}')
-        self.cb_q  += [args]
+        self.cb_q  += [(*args, False)]
         utils.declare_finish(self)
     #End-def
     
@@ -143,4 +151,7 @@ class Turret(TgtSprite):
     
     @property
     def mouse_info(self) -> str: return f'{self.tag} --> {self.current_dir}'
+    
+    @property
+    def overutilization(self) -> float: return self.overrun_ctr/self.update_ctr
 #End-class
