@@ -52,6 +52,9 @@ class Bullet(Sprite):
 #End-class
 
 class Turret(TgtSprite):
+    '''
+    Base class for the player-defined turrets
+    '''
     
     sp_grp = OrderedUpdates()
     
@@ -62,6 +65,20 @@ class Turret(TgtSprite):
     UPDATE_FACTOR = 4
     
     def __init__(self, a_type : str, spawn_x : float, spawn_y : float, tag : Union[str, None]):
+        '''
+        Spawns a new turrent
+        
+        PARAMETERS
+        ----------
+        a_type : str
+            Type of turret being spawned, should be named under the folder containing this script
+        
+        spawn_x, spawn_y : pixel
+            Location of the turret
+        
+        tag : str or None
+            A user-defined identifier if provided
+        '''
         super().__init__(a_type, self.sp_grp)
         if tag: self.tag = tag
         else:   self.tag = str(id(self) )
@@ -89,10 +106,17 @@ class Turret(TgtSprite):
         self.update_ctr                   = 0.0
     #End-def
     
-    # TODO: Need to figure out why this does not line up with the barrel
     def fire_bullet(self): Bullet(utils.Vector2(self.rect.center), self.BULLET_SPAWN_DIST, self.current_dir)
     
     def update(self, all_tgts : Union[List[Tuple], None] = None):
+        '''
+        [pygame] Update function
+        
+        PARAMETERS
+        ----------
+        all_tgts : List[Tuple], None
+            Passed into the user-defined twr_func as the `LoT`
+        '''
         if all_tgts:
             if self.cb_q:
                 self.target_dir, self.fire, in_rad, self.waiting_for_tfunc = self.cb_q.pop(0)
