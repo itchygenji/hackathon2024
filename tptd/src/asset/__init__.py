@@ -61,7 +61,7 @@ class Turret(TgtSprite):
     
     UPDATE_FACTOR = 4
     
-    def __init__(self, a_type : str, spawn_x : float, spawn_y : float, tag : Union[str, None]): # Need additional argument for USR/SIM phase
+    def __init__(self, a_type : str, spawn_x : float, spawn_y : float, tag : Union[str, None]):
         super().__init__(a_type, self.sp_grp)
         if tag: self.tag = tag
         else:   self.tag = str(id(self) )
@@ -75,7 +75,8 @@ class Turret(TgtSprite):
         self.rpt        = MSEC_PER_UPDATE * load(turrData) / 1000
         turrData.close()
         self.fire          = False
-        self.current_dir   = utils.FULL_CIRCLE*(random() - 0.5)
+        _, sp_pos, _       = self.tgt_data
+        self.current_dir   = sp_pos.as_polar()[1]
         self.target_dir    = self.current_dir
         self.nf_dir        = 0
         self.image         = utils.init_img_rot(self.original_image, self.current_dir)
