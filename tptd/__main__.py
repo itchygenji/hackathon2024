@@ -13,6 +13,7 @@ from sys        import argv
 from typing     import List
 
 THIS_FOLDER = Path(__file__).parent
+DEMO_PNG    = THIS_FOLDER / 'demo.png'
 
 global PLAYER_BASE
 
@@ -47,8 +48,6 @@ def gen_txt_img(txt : str) -> pygame.Surface: return smallfont.render(txt, True,
 TXT_OFFSET = utils.Vector2(5, 5)
 def draw_txt(txt : str, pos : utils.Vector2): screen.blit(gen_txt_img(txt), pos + TXT_OFFSET)
 
-pygame.time.set_timer(pygame.USEREVENT, int(MSEC_PER_UPDATE) )
-
 loop_count   = 0
 SHELL_UPDATE = 50
 
@@ -66,7 +65,13 @@ num_twr         = 0
 final_score_msg = ''
 
 if __name__ == '__main__':
+    draw_demo = not DEMO_PNG.is_file()
+    if draw_demo: screen.blit(BACKGROUND, (0,0) )
     path_rects = draw_enemy_path()
+    if draw_demo:
+        all_base_sprites.draw(screen)
+        pygame.image.save(screen, DEMO_PNG)
+    #End-if
     for twr in TWR_POS:
         curr_twr = Turret('Basic Autocannon', twr[0] + PLAYER_BASE.rect.centerx, twr[1] + PLAYER_BASE.rect.centery, *twr[2:])
         if curr_twr.rect.collidelist(path_rects) >= 0:
@@ -76,6 +81,8 @@ if __name__ == '__main__':
         #End-if
     #End-for
     game_over = False
+    
+    pygame.time.set_timer(pygame.USEREVENT, int(MSEC_PER_UPDATE) )
     while not game_over:
         
         usr_evt_flag = False
@@ -100,7 +107,7 @@ if __name__ == '__main__':
                 #End-case
             #End-match
         #End-for
-                    
+        
         screen.blit(BACKGROUND, (0,0) )
         draw_enemy_path()
         Turret.sp_grp.draw(screen)

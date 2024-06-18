@@ -129,10 +129,7 @@ class Turret(TgtSprite):
                 self.round_load -= 1
             #End-if
             if self.round_load < 1: self.round_load += self.rpt
-        elif self in utils.curr_proc:
-            num_delay = len(self.cb_q)
-            if num_delay > self.UPDATE_FACTOR: print(f'Warning: twr_func call for {self.tag} is overruning by {num_delay} frames ...')
-            self.cb_delay += [(self.target_dir, self.fire, False, self.waiting_for_tfunc)]
+        elif self in utils.curr_proc: self.cb_q += [(self.target_dir, self.fire, False, self.waiting_for_tfunc)]
         #End-if
     #End-def
     
