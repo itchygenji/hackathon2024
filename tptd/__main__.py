@@ -58,7 +58,7 @@ def draw_enemy_path() -> List[pygame.rect.Rect]:
 
 bad_twr_rects = []
 
-enemy_wave = [ [100, 'Evil Spider'] for i in range(10)] + [ [500, 'Beast Rider'] ] + [ [70, 'Beast Rider'] for i in range(8)] + [ [200, 'Onyx Golem'] for i in range(3)]
+enemy_wave = [ [100, 'Evil Spider'] for i in range(30)] + [ [500, 'Beast Rider'] ] + [ [120, 'Beast Rider'] for i in range(16)] + [ [300, 'Onyx Golem'] for i in range(8)]
 curr_enemy = enemy_wave.pop(0)
 
 num_twr         = 0

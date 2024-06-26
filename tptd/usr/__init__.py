@@ -6,9 +6,9 @@ THIS_FOLDER = Path(__file__).resolve().parent
 TWR_POS = []
 with open(THIS_FOLDER / 'twr.csv', 'r') as twr_h:
     for ln in twr_h:
-        ln_parts = ln.strip().split(',')
-        t_args = [ln_parts.pop(0)] + [int(ln_parts.pop(0) ) for c in range(2)]
-        TWR_POS += [tuple(t_args)] + [None]
+        ln_parts = ln.strip().split(',') + [None]
+        for idx in range(1, 3): ln_parts[idx] = int(ln_parts[idx])
+        TWR_POS += [tuple(ln_parts + [None])]
     #End-for
 #End-with
 # <-- DO NOT EDIT

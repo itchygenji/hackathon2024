@@ -11,7 +11,7 @@ from pygame.sprite import Sprite, spritecollideany, collide_mask
 
 # Standard
 from configparser import ConfigParser
-from functools    import lru_cache
+from functools    import lru_cache, cached_property
 
 from enum    import Enum
 from math    import isnan, nan, sqrt, degrees, radians
@@ -54,10 +54,10 @@ class Bullet(Sprite):
     #End-def
 #End-class
 
-CFG_PARSE = ConfigParser()
 
 @lru_cache
 def get_ini_data(ini_path : Path, section : str = 'DEFAULT'):
+    CFG_PARSE = ConfigParser()
     CFG_PARSE.read(ini_path)
     return CFG_PARSE[section]
 #End-def
@@ -68,19 +68,16 @@ class Turret(TgtSprite):
     '''
     sp_grp    = OrderedUpdates()
     
-    FULL_SIZE           = 40
-    HALF_SIZE           = FULL_SIZE/2
-    BULLET_SPAWN_DIST   = HALF_SIZE*sqrt(2) + 5 # Might want to up this for larger turrets
-    
     UPDATE_FACTOR = 4
     
     @staticmethod
     def get_type_data(a_type : str) -> dict:
         turrDataDir = THIS_FOLDER / a_type
+        result = {'original_image' : image.load(turrDataDir / 'sprite.png') }
         ini_data = get_ini_data(turrDataDir / 'data.ini')
-        result = {'original_image' : image.load(turrDataDir / 'sprite.png')}
-        for k in ['bullet_speed', 'bullet_dmg', 'tpr']: result[k] = int(ini_data[k])
-        for k in ['rot_speed']: result[k] = float(ini_data[k])*SEC_PER_UPDATE
+        for k in ['bullet_dmg', 'tpr']: result[k] = int(ini_data[k])
+        for k in ['rot_speed', 'bullet_speed']: result[k] = float(ini_data[k])
+        result['rot_speed'] *= SEC_PER_UPDATE
         return result
     #End-def
     
@@ -102,14 +99,13 @@ class Turret(TgtSprite):
         super().__init__(a_type, self.sp_grp)
         if tag: self.tag = tag
         else:   self.tag = str(id(self) )
-        self.rect       = Rect(spawn_x - self.HALF_SIZE, spawn_y - self.HALF_SIZE, self.FULL_SIZE, self.FULL_SIZE)
         for at, v in self.get_type_data(a_type).items(): setattr(self, at, v)
+        self.rect       = Rect(spawn_x - self.__half_size, spawn_y - self.__half_size, *([self.__full_size]*2) )
         
         self.fire          = False
         _, sp_pos, _       = self.tgt_data
         self.current_dir   = sp_pos.as_polar()[1]
         self.target_dir    = self.current_dir
-        self.nf_dir        = 0
         self.image         = utils.init_img_rot(self.original_image, self.current_dir)
         
         self.ticks_since_last_user_update = randrange(self.UPDATE_FACTOR)
@@ -120,7 +116,16 @@ class Turret(TgtSprite):
         self.update_ctr                   = 0.0
     #End-def
     
-    def fire_bullet(self): Bullet(utils.Vector2(self.rect.center), self.BULLET_SPAWN_DIST, self.current_dir, self.bullet_speed, self.bullet_dmg)
+    @cached_property
+    def __full_size(self): return self.original_image.get_width()
+    
+    @cached_property
+    def __half_size(self): return self.__full_size/2
+    
+    @cached_property
+    def __bullet_spawn_dist(self): return self.__half_size*sqrt(2) + 5
+    
+    def fire_bullet(self): Bullet(utils.Vector2(self.rect.center), self.__bullet_spawn_dist, self.current_dir, self.bullet_speed, self.bullet_dmg)
     
     def update(self, all_tgts : Union[List[Tuple], None] = None):
         '''
@@ -139,7 +144,6 @@ class Turret(TgtSprite):
                 self.target_dir = utils.ang_mod(self.target_dir)
             #End-if
             
-            dir_error = utils.ang_mod(self.target_dir - self.current_dir)
             if self.ticks_since_last_user_update == 0:
                 self.update_ctr += 1
                 if self.waiting_for_tfunc:  self.overrun_ctr += 1
@@ -150,21 +154,23 @@ class Turret(TgtSprite):
             self.ticks_since_last_user_update %= self.UPDATE_FACTOR
             
             # Update the current state
-            if (dir_error != 0) and (self.nf_dir == 0):
-                dir_check = abs(dir_error)
-                sign        = dir_error/dir_check
-                self.nf_dir = sign*self.rot_speed
-            elif abs(dir_error) < abs(self.nf_dir):
-                self.nf_dir = 0
-                self.current_dir = self.target_dir
+            dir_error = utils.ang_mod(self.target_dir - self.current_dir)
+            if  abs(dir_error) > abs(self.rot_speed):
+                if dir_error < 0: dir_error = -self.rot_speed
+                else:             dir_error =  self.rot_speed
             #End-if
-            self.current_dir = utils.ang_mod(self.current_dir + self.nf_dir)
+            self.current_dir = utils.ang_mod(self.current_dir + dir_error)
             self.image = utils.init_img_rot(self.original_image, self.current_dir) # Has to be done on the **original** image or else the sprite will get corrupted
             self.rect  = self.image.get_rect(center=self.rect.center)
             
             # Fire the next bullet?
-            if self.fire and (self.ttnr == 0): self.fire_bullet()
-            self.ttnr = (self.ttnr + 1) % self.tpr
+            tick = 0
+            if self.ttnr: tick = 1
+            elif self.fire:
+                self.fire_bullet()
+                tick = 1
+            #End-if
+            self.ttnr = (self.ttnr + tick) % self.tpr
         elif self in utils.curr_proc: self.cb_q += [(self.target_dir, self.fire, False, self.waiting_for_tfunc)]
         #End-if
     #End-def
