@@ -7,9 +7,8 @@ TWR_POS = []
 with open(THIS_FOLDER / 'twr.csv', 'r') as twr_h:
     for ln in twr_h:
         ln_parts = ln.strip().split(',')
-        t_args = [int(ln_parts.pop(0) ) for c in range(2)]
-        if ln_parts: t_args += [ln_parts.pop(0)]
-        TWR_POS += [tuple(t_args)]
+        t_args = [ln_parts.pop(0)] + [int(ln_parts.pop(0) ) for c in range(2)]
+        TWR_POS += [tuple(t_args)] + [None]
     #End-for
 #End-with
 # <-- DO NOT EDIT
@@ -57,5 +56,5 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
         Indicates if the output target_dir is in radians
     
     '''
-    return (current_dir, False, False)
+    return (coord.as_polar()[1], True, False)
 #End-def

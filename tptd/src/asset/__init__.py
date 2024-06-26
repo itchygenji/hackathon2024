@@ -10,28 +10,31 @@ from pygame        import image, Rect, Surface, transform
 from pygame.sprite import Sprite, spritecollideany, collide_mask
 
 # Standard
+from configparser import ConfigParser
+from functools    import lru_cache
+
 from enum    import Enum
-from marshal import load
 from math    import isnan, nan, sqrt, degrees, radians
 from pathlib import Path
 from random  import random, randrange
 from typing  import Union, List, Tuple
 
-THIS_FOLDER = Path(__file__).parent
-
+THIS_FOLDER     = Path(__file__).parent
+SEC_PER_UPDATE  = MSEC_PER_UPDATE / 1000
+VEL_SCALE       = SEC_PER_UPDATE / GAMEFEET_PER_PIXEL
 
 class Bullet(Sprite):
     
     BULLET_IMG = image.load(THIS_FOLDER / 'bullet.png')
-    MUZZLE_VEL = 75*MSEC_PER_UPDATE / (GAMEFEET_PER_PIXEL*1000) # TODO: Slowed to make things interesting, may want to change for different turrets
     
-    def __init__(self, spawn : utils.Vector2, offset : float, direction : float):
+    def __init__(self, spawn : utils.Vector2, offset : float, direction : float, muzzle_vel : float = 75, damage : int=1):
         super().__init__(all_base_sprites)
         self.image          = utils.init_img_rot(self.BULLET_IMG, direction)
         self.rect           = self.image.get_bounding_rect()
         self.__pos          = spawn + utils.Vector2.from_polar( (offset, direction) )
         self.rect.center    = self.__pos
-        self.__vel          = utils.Vector2.from_polar( (self.MUZZLE_VEL, direction) )
+        self.__vel          = utils.Vector2.from_polar( (muzzle_vel*VEL_SCALE, direction) )
+        self.__dmg          = damage
     #End-def
     
     def update(self, screen_rect):
@@ -42,7 +45,7 @@ class Bullet(Sprite):
         if not bKill:
             tgt = spritecollideany(self, Enemy.sp_grp, collide_mask)
             if tgt:
-                tgt.hit()
+                tgt.hit(self.__dmg)
                 bKill = True
             #End-if
         #End-if
@@ -51,18 +54,35 @@ class Bullet(Sprite):
     #End-def
 #End-class
 
+CFG_PARSE = ConfigParser()
+
+@lru_cache
+def get_ini_data(ini_path : Path, section : str = 'DEFAULT'):
+    CFG_PARSE.read(ini_path)
+    return CFG_PARSE[section]
+#End-def
+
 class Turret(TgtSprite):
     '''
     Base class for the player-defined turrets
     '''
-    
-    sp_grp = OrderedUpdates()
+    sp_grp    = OrderedUpdates()
     
     FULL_SIZE           = 40
     HALF_SIZE           = FULL_SIZE/2
     BULLET_SPAWN_DIST   = HALF_SIZE*sqrt(2) + 5 # Might want to up this for larger turrets
     
     UPDATE_FACTOR = 4
+    
+    @staticmethod
+    def get_type_data(a_type : str) -> dict:
+        turrDataDir = THIS_FOLDER / a_type
+        ini_data = get_ini_data(turrDataDir / 'data.ini')
+        result = {'original_image' : image.load(turrDataDir / 'sprite.png')}
+        for k in ['bullet_speed', 'bullet_dmg', 'tpr']: result[k] = int(ini_data[k])
+        for k in ['rot_speed']: result[k] = float(ini_data[k])*SEC_PER_UPDATE
+        return result
+    #End-def
     
     def __init__(self, a_type : str, spawn_x : float, spawn_y : float, tag : Union[str, None]):
         '''
@@ -83,14 +103,8 @@ class Turret(TgtSprite):
         if tag: self.tag = tag
         else:   self.tag = str(id(self) )
         self.rect       = Rect(spawn_x - self.HALF_SIZE, spawn_y - self.HALF_SIZE, self.FULL_SIZE, self.FULL_SIZE)
-        turrDataDir = THIS_FOLDER / a_type
-        self.original_image = image.load(turrDataDir / 'sprite.png')
-        # TODO: Should use a ".ini" file instead
-        turrData = open(turrDataDir / 'param.bin', 'rb')
-        self.acq_range  = load(turrData) / GAMEFEET_PER_PIXEL # ... especially since this isn't being used
-        self.rot_speed  = MSEC_PER_UPDATE * load(turrData) / 1000
-        self.rpt        = MSEC_PER_UPDATE * load(turrData) / 1000
-        turrData.close()
+        for at, v in self.get_type_data(a_type).items(): setattr(self, at, v)
+        
         self.fire          = False
         _, sp_pos, _       = self.tgt_data
         self.current_dir   = sp_pos.as_polar()[1]
@@ -99,14 +113,14 @@ class Turret(TgtSprite):
         self.image         = utils.init_img_rot(self.original_image, self.current_dir)
         
         self.ticks_since_last_user_update = randrange(self.UPDATE_FACTOR)
-        self.round_load                   = 1
+        self.ttnr                         = 0
         self.cb_q                         = []
         self.waiting_for_tfunc            = False
         self.overrun_ctr                  = 0.0
         self.update_ctr                   = 0.0
     #End-def
     
-    def fire_bullet(self): Bullet(utils.Vector2(self.rect.center), self.BULLET_SPAWN_DIST, self.current_dir)
+    def fire_bullet(self): Bullet(utils.Vector2(self.rect.center), self.BULLET_SPAWN_DIST, self.current_dir, self.bullet_speed, self.bullet_dmg)
     
     def update(self, all_tgts : Union[List[Tuple], None] = None):
         '''
@@ -149,11 +163,8 @@ class Turret(TgtSprite):
             self.rect  = self.image.get_rect(center=self.rect.center)
             
             # Fire the next bullet?
-            if self.fire and self.round_load >= 1:
-                self.fire_bullet()
-                self.round_load -= 1
-            #End-if
-            if self.round_load < 1: self.round_load += self.rpt
+            if self.fire and (self.ttnr == 0): self.fire_bullet()
+            self.ttnr = (self.ttnr + 1) % self.tpr
         elif self in utils.curr_proc: self.cb_q += [(self.target_dir, self.fire, False, self.waiting_for_tfunc)]
         #End-if
     #End-def
@@ -167,7 +178,7 @@ class Turret(TgtSprite):
     #End-def
     
     def err_cb(self, e):
-        print(e)
+        print(f'**Error ({self.tag}): {e}')
         utils.declare_finish(self)
     #End-def
     

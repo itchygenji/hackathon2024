@@ -58,7 +58,7 @@ def draw_enemy_path() -> List[pygame.rect.Rect]:
 
 bad_twr_rects = []
 
-enemy_wave = [ [100, 'Evil Spider'] for i in range(10)]
+enemy_wave = [ [100, 'Evil Spider'] for i in range(10)] + [ [500, 'Beast Rider'] ] + [ [70, 'Beast Rider'] for i in range(8)] + [ [200, 'Onyx Golem'] for i in range(3)]
 curr_enemy = enemy_wave.pop(0)
 
 num_twr         = 0
@@ -73,12 +73,15 @@ if __name__ == '__main__':
         pygame.image.save(screen, DEMO_PNG)
     #End-if
     for twr in TWR_POS:
-        curr_twr = Turret('Basic Autocannon', twr[0] + PLAYER_BASE.rect.centerx, twr[1] + PLAYER_BASE.rect.centery, *twr[2:])
-        if curr_twr.rect.collidelist(path_rects) >= 0:
-            print(f'Cannot spawn tower at position: {curr_twr.rect.center}')
-            curr_twr.kill()
-        else: num_twr += 1
-        #End-if
+        try:
+            curr_twr = Turret(twr[0], twr[1] + PLAYER_BASE.rect.centerx, twr[2] + PLAYER_BASE.rect.centery, twr[3])
+            if curr_twr.rect.collidelist(path_rects) >= 0:
+                print(f'Cannot spawn tower at position: {curr_twr.rect.center}')
+                curr_twr.kill()
+            else: num_twr += 1
+            #End-if
+        except: print(f'Unable to spawn {twr[0]} at position {twr[1:3]}')
+        # End-try
     #End-for
     game_over = False
     
@@ -97,7 +100,7 @@ if __name__ == '__main__':
                         Turret.sp_grp.update([tgt.tgt_data for tgt in (Turret.sp_grp.sprites() + Enemy.sp_grp.sprites() )])
                         all_base_sprites.update(screen.get_rect() )
                         curr_enemy[0] -= 1
-                        if curr_enemy[0] == 0:
+                        if (curr_enemy[0] == 0) or (not bool(Enemy.sp_grp.sprites() ) ):
                             Enemy(curr_enemy[1])
                             if enemy_wave: curr_enemy = enemy_wave.pop(0)
                             else:          curr_enemy = [-1, '']

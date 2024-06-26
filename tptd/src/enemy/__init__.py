@@ -8,7 +8,6 @@ from pygame.sprite import Group, collide_mask
 
 from enum    import Enum
 from math    import sqrt
-from marshal import load
 from pathlib import Path
 
 global PLAYER_BASE
@@ -24,15 +23,14 @@ class Enemy(TgtSprite):
     def __init__(self, a_type : str):
         super().__init__(a_type, all_base_sprites, self.sp_grp)
         self.__pos       = Vector2(ENEMY_PATH_PIX[0])
-        turrDataDir      = THIS_FOLDER / a_type
-        self.image       = image.load(turrDataDir / 'sprite.png')
+        tgtDataDir       = THIS_FOLDER / a_type
+        self.image       = image.load(tgtDataDir / 'sprite.png')
         self.rect        = self.image.get_bounding_rect()
         self.rect.center = self.__pos
         self.__nxt_chkpkt_idx  = 1
-        # TODO: Should use a ".ini" file instead
-        with open(turrDataDir / 'param.bin', 'rb') as turrData:
-            self.__hp       = load(turrData)
-            self.__frm_spd  = SEC_PER_UPDATE * load(turrData) / GAMEFEET_PER_PIXEL
+        with open(tgtDataDir / 'data.txt', 'r') as tgtData:
+            self.__hp       = int(tgtData.readline().strip() )
+            self.__frm_spd  = SEC_PER_UPDATE * float(tgtData.readline().strip() ) / GAMEFEET_PER_PIXEL
         #End-with
     #End-def
     
