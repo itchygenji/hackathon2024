@@ -8,6 +8,7 @@ from .usr           import TWR_POS
 import pygame
 
 from functools  import lru_cache
+from math       import floor
 from pathlib    import Path
 from sys        import argv
 from typing     import List
@@ -17,6 +18,7 @@ DEMO_PNG    = THIS_FOLDER / 'demo.png'
 
 global PLAYER_BASE
 
+OVERUTIL_GRAN = 10
 
 # initializing the constructor 
 pygame.init() 
@@ -144,7 +146,7 @@ if __name__ == '__main__':
             Towers Deployed:        {num_twr}
             Enemies neutralized:    {Enemy.killed}
             Enemies survided:       {PLAYER_BASE.damage}
-            Max Overutilization:    {oukd}
+            Max Overutilization:    {floor(oukd*OVERUTIL_GRAN)/OVERUTIL_GRAN}
             --------------------------------
             FINAL SCORE:            {tot_pkd}
             '''
