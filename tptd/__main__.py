@@ -100,7 +100,7 @@ if __name__ == '__main__':
                         Turret.sp_grp.update([tgt.tgt_data for tgt in (Turret.sp_grp.sprites() + Enemy.sp_grp.sprites() )])
                         all_base_sprites.update(screen.get_rect() )
                         curr_enemy[0] -= 1
-                        if (curr_enemy[0] == 0) or (not bool(Enemy.sp_grp.sprites() ) ):
+                        if ( (curr_enemy[0] == 0) or (not bool(Enemy.sp_grp.sprites() ) ) ) and bool(enemy_wave):
                             Enemy(curr_enemy[1])
                             if enemy_wave: curr_enemy = enemy_wave.pop(0)
                             else:          curr_enemy = [-1, '']
