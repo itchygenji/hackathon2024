@@ -1,6 +1,8 @@
 # DO NOT EDIT -->
 from pathlib    import Path
 from typing     import Tuple
+import numpy as np
+import math
 
 THIS_FOLDER = Path(__file__).resolve().parent
 TWR_POS = []
@@ -62,37 +64,56 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     #print(coord)
     #print("List of target")
     #print(LoT)
+
+    currentTurret = 0
+    firstEnemy = 1
+
     print("current direction")
     print(current_dir)
-    print("First target's name")
-    print(LoT[1][0])
-    print("First target position")
-    print(LoT[1][1])
-    print("First target velocity")
-    print(LoT[1][2])
-
-
-    coordtarget_dir = 0
-    print("Coordinate of Current Turret")
-    print(coord)
-    print("Current direction")
-    print(current_dir)
-    print("Target direction")
-    print(target_dir)
     
+    print("length of list of targets")
+    print(len(LoT))
+
+    pewDirectionVector = 0
+
+
+    if len(LoT)>1:
+        print("First target's name")
+        print(LoT[1][0])
+        print("First target position")
+        print(LoT[1][1])
+        print("First target velocity")
+        print(LoT[1][2])
+
+        print("Coordinate of Current Turret")
+        print(coord)
+        print("Current direction")
+        print(current_dir)
+        print("Target direction")
+        print(target_dir)
+
+        print(f'Current Turret X: {LoT[currentTurret][1][0]}')
+        print(f'Current Enemy X: {LoT[firstEnemy][1][0]}')
+        print(f'Current Turret Y: {LoT[currentTurret][1][1]}')
+        print(f'Current Enemy Y: {LoT[firstEnemy][1][1]}')
+
+        xDif = (LoT[firstEnemy][1][0]-LoT[currentTurret][1][0])
+        yDif = (LoT[firstEnemy][1][1]-LoT[currentTurret][1][1])
+        pewDirectionVector = math.degrees(math.atan2(yDif,xDif))
+
+        print(f'pewDirectionVector: {pewDirectionVector}')
+
     
 #coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
-    print("DOING COORD RN")
-    print(coord)
+
+
 
     # print("FAKE COORD POLAR")
     # print(coord.as_polar()[1])
 
-    # coord = [0,0]
 
 
 
-    return (coord.as_polar()[1], True, False)
-    # return (720, True, False)
+    return (pewDirectionVector, True, False)
 
 #End-def
