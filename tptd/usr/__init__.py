@@ -56,5 +56,43 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
         Indicates if the output target_dir is in radians
     
     '''
+
+#I'm trying to figure out how to even change the turret direction
+    #print("Coord")
+    #print(coord)
+    #print("List of target")
+    #print(LoT)
+    print("current direction")
+    print(current_dir)
+    print("First target's name")
+    print(LoT[1][0])
+    print("First target position")
+    print(LoT[1][1])
+    print("First target velocity")
+    print(LoT[1][2])
+
+
+    coordtarget_dir = 0
+    print("Coordinate of Current Turret")
+    print(coord)
+    print("Current direction")
+    print(current_dir)
+    print("Target direction")
+    print(target_dir)
+    
+    
+#coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
+    print("DOING COORD RN")
+    print(coord)
+
+    # print("FAKE COORD POLAR")
+    # print(coord.as_polar()[1])
+
+    # coord = [0,0]
+
+
+
     return (coord.as_polar()[1], True, False)
+    # return (720, True, False)
+
 #End-def
