@@ -64,9 +64,16 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     #print(coord)
     #print("List of target")
     #print(LoT)
+    #Howitzer bullet speed 50
+    #Autocannon bullet speed 70
 
     currentTurret = 0
     firstEnemy = 1
+
+
+
+    current_target_pos = [LoT[firstEnemy][1],LoT[firstEnemy][2]]
+    
 
     print("current direction")
     print(current_dir)
