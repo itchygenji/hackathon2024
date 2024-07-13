@@ -3,6 +3,7 @@ from pathlib    import Path
 from typing     import Tuple
 import numpy as np
 import math
+from datetime import datetime
 
 THIS_FOLDER = Path(__file__).resolve().parent
 TWR_POS = []
@@ -67,60 +68,49 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     #Howitzer bullet speed 50
     #Autocannon bullet speed 70
 
-    currentTurret = 0
-    firstEnemy = 1
+    # Initializing Variables
+    current_turret = 0
+    current_enemy = 1
+    pew_direction_degree = 0
+    current_turret_bullet_speed = 50
 
+    distance2pixel = 0
 
-
-    current_target_pos = [LoT[firstEnemy][1],LoT[firstEnemy][2]]
-    
-
-    print("current direction")
-    print(current_dir)
-    
-    print("length of list of targets")
-    print(len(LoT))
-
-    pewDirectionVector = 0
-
-
+    # You need a check here in case there is no elgible enemies in the area
     if len(LoT)>1:
-        print("First target's name")
-        print(LoT[1][0])
-        print("First target position")
-        print(LoT[1][1])
-        print("First target velocity")
-        print(LoT[1][2])
 
-        print("Coordinate of Current Turret")
-        print(coord)
-        print("Current direction")
-        print(current_dir)
-        print("Target direction")
-        print(target_dir)
+        current_turret_pos = LoT[current_turret][1]
+        current_target_pos = LoT[current_enemy][1]
+        current_target_vel = LoT[current_enemy][2]
 
-        print(f'Current Turret X: {LoT[currentTurret][1][0]}')
-        print(f'Current Enemy X: {LoT[firstEnemy][1][0]}')
-        print(f'Current Turret Y: {LoT[currentTurret][1][1]}')
-        print(f'Current Enemy Y: {LoT[firstEnemy][1][1]}')
+        if LoT[current_turret][0]=="basic autocannon":
+            current_turret_bullet_speed = 70
 
-        xDif = (LoT[firstEnemy][1][0]-LoT[currentTurret][1][0])
-        yDif = (LoT[firstEnemy][1][1]-LoT[currentTurret][1][1])
-        pewDirectionVector = math.degrees(math.atan2(yDif,xDif))
+        current_distance = distance(current_target_pos, current_turret_pos)
+        current_direction_degree = get_degree(current_target_pos, current_turret_pos)
 
-        print(f'pewDirectionVector: {pewDirectionVector}')
+        pew_direction_degree = get_degree(current_target_pos, current_turret_pos)
+
+        #Maybe change to something more accurate in the future
+        estimated_distance_time = current_distance / current_turret_bullet_speed
+        predicted_target_pos_x = current_target_pos[0] + estimated_distance_time * current_target_vel[0]
+        predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1]
+        predicted_target_pos = [current_target_pos[0],current_target_pos[1]]
 
     
 #coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
 
 
-
-    # print("FAKE COORD POLAR")
-    # print(coord.as_polar()[1])
-
-
-
-
-    return (pewDirectionVector, True, False)
+    return (pew_direction_degree, True, False)
 
 #End-def
+
+def get_degree(p1, p2):
+    xDif = (p1[0]-p2[0])
+    yDif = (p1[1]-p2[1])
+    pew_direction_degree = math.degrees(math.atan2(yDif,xDif))
+    return pew_direction_degree
+
+def distance(p1, p2):
+    return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
+
