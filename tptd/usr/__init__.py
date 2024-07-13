@@ -73,7 +73,7 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     current_enemy = 1
     pew_direction_degree = 0
     current_turret_bullet_speed = 50
-
+    feet_to_pixel=10/40
     distance2pixel = 0
 
     # You need a check here in case there is no elgible enemies in the area
@@ -93,10 +93,18 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
 
         #Maybe change to something more accurate in the future
         estimated_distance_time = current_distance / current_turret_bullet_speed
-        predicted_target_pos_x = current_target_pos[0] + estimated_distance_time * current_target_vel[0]
-        predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1]
+
+        # We gotta do some funky math here boss
+        # What we know = turret position, turret velocity(0),arget position, target velocity
+        predicted_target_pos_x = current_target_pos[0] + estimated_distance_time * current_target_vel[0] / feet_to_pixel
+        predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1] / feet_to_pixel
         predicted_target_pos = [current_target_pos[0],current_target_pos[1]]
 
+        #TEST
+        #pew_direction_degree = pre_intersect_prediction(current_turret_pos,current_target_pos,current_target_vel,current_turret_bullet_speed)
+
+
+    
     
 #coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
 
@@ -113,4 +121,58 @@ def get_degree(p1, p2):
 
 def distance(p1, p2):
     return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
+
+def pre_intersect_prediction(pTurret,pTarget,vTarget,bulletVel):
+    #xb0 = Initial Bullet X Position
+    #xt0 = Initial Turret X Position
+
+    #Velocity Data in PIXELS from pygame
+    print(f'pTurret:',pTurret)
+    print(f'pTarget:',pTarget)
+    print(f'vTarget:',vTarget)
+    print(f'bulletVel',bulletVel)
+    
+    feet_to_pixel=10/40
+    #30 Hertz sim
+    xb0=pTurret[0]
+    xt0=pTarget[0]
+    yb0=pTurret[1]
+    yt0=pTarget[1]
+    
+    vtx=vTarget[0]
+    vty=vTarget[1]
+
+    angle = 0
+
+    if vtx != 0:
+        #Basically if the current target is moving horizontally and below
+
+        #Super goofy equation that was derived
+        t=(-2*xt0*vtx-((2*xt0*vtx)**2-4*(vtx**2-bulletVel**2)*(xt0**2+abs(yt0-yb0)**2))**0.5)/(2*(vtx**2-bulletVel**2))
+        xPredict=xt0+vtx*t
+        print(f'vtx:',vtx)
+        print(f'xb0:',xb0)
+        print(f't:',t)
+        print(f'PREDICTION:',xPredict)
+        print(yt0-yb0)
+        angle = math.degrees(math.atan2(abs(yt0-yb0),xPredict))
+        print(f'ANGLE:',angle)
+        print(angle)
+    else:
+        print("HALT")
+#Super goofy equation that was derived
+        t=(-2*xt0*vtx-((2*xt0*vtx)**2-4*(vtx**2-bulletVel**2)*(xt0**2+abs(yt0-yb0)**2))**0.5)/(2*(vtx**2-bulletVel**2))
+        xPredict=xt0+vtx*t
+        print(f'vtx:',vtx)
+        print(f'xb0:',xb0)
+        print(f't:',t)
+        print(f'PREDICTION:',xPredict)
+        print(yt0-yb0)
+        angle = math.degrees(math.atan2(abs(yt0-yb0),xPredict))
+        print(f'ANGLE:',angle)
+        print(angle)
+        #print(angle)
+
+    return angle
+
 
