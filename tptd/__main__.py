@@ -8,6 +8,7 @@ from .usr           import TWR_POS
 import pygame
 
 from functools  import lru_cache
+from math       import floor
 from pathlib    import Path
 from sys        import argv
 from typing     import List
@@ -17,6 +18,7 @@ DEMO_PNG    = THIS_FOLDER / 'demo.png'
 
 global PLAYER_BASE
 
+OVERUTIL_GRAN = 1000
 
 # initializing the constructor 
 pygame.init() 
@@ -75,15 +77,18 @@ if __name__ == '__main__':
     for twr in TWR_POS:
         try:
             curr_twr = Turret(twr[0], twr[1] + PLAYER_BASE.rect.centerx, twr[2] + PLAYER_BASE.rect.centery, twr[3])
-            if curr_twr.rect.collidelist(path_rects) >= 0:
-                print(f'Cannot spawn tower at position: {curr_twr.rect.center}')
+            if (curr_twr.rect.collidelist(path_rects) >= 0) or bool(set(pygame.sprite.spritecollide(curr_twr, Turret.sp_grp, False) ) - {curr_twr}): # Likely that `curr_twr` collides with itself :/
+                print(f'Cannot spawn {twr[0]} at position: {twr[1:3]}')
                 curr_twr.kill()
             else: num_twr += 1
             #End-if
-        except: print(f'Unable to spawn {twr[0]} at position {twr[1:3]}')
+        except Exception as e:
+            print(f'Error spawning {twr[0]} at position {twr[1:3]}:\n{e}')
+            if hasattr(curr_twr, 'kill'): curr_twr.kill()
         # End-try
     #End-for
-    game_over = False
+    game_over = num_twr == 0
+    if game_over: print('Aborting: unable to spawn any towers')
     
     pygame.time.set_timer(pygame.USEREVENT, int(MSEC_PER_UPDATE) )
     while not game_over:
@@ -100,7 +105,7 @@ if __name__ == '__main__':
                         Turret.sp_grp.update([tgt.tgt_data for tgt in (Turret.sp_grp.sprites() + Enemy.sp_grp.sprites() )])
                         all_base_sprites.update(screen.get_rect() )
                         curr_enemy[0] -= 1
-                        if (curr_enemy[0] == 0) or (not bool(Enemy.sp_grp.sprites() ) ):
+                        if ( (curr_enemy[0] == 0) or (not bool(Enemy.sp_grp.sprites() ) ) ) and bool(enemy_wave):
                             Enemy(curr_enemy[1])
                             if enemy_wave: curr_enemy = enemy_wave.pop(0)
                             else:          curr_enemy = [-1, '']
@@ -132,7 +137,7 @@ if __name__ == '__main__':
         pygame.display.flip()
         
         if not (bool(enemy_wave) or bool(Enemy.sp_grp.sprites() ) ):
-            oukd    = max([twr.overutilization for twr in Turret.sp_grp.sprites()])
+            oukd    = floor(max([twr.overutilization for twr in Turret.sp_grp.sprites()])*OVERUTIL_GRAN)/OVERUTIL_GRAN
             tot_pkd = float(5*Enemy.killed - PLAYER_BASE.damage - 10*num_twr)
             if tot_pkd > 0: tot_pkd *= 1 - oukd
             
@@ -141,7 +146,7 @@ if __name__ == '__main__':
             Towers Deployed:        {num_twr}
             Enemies neutralized:    {Enemy.killed}
             Enemies survided:       {PLAYER_BASE.damage}
-            Max Overutilization:    {oukd}
+            Max Overutilization:    {oukd*100}%
             --------------------------------
             FINAL SCORE:            {tot_pkd}
             '''
