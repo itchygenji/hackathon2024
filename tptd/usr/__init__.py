@@ -3,7 +3,8 @@ from pathlib    import Path
 from typing     import Tuple
 import numpy as np
 import math
-from datetime import datetime
+import datetime
+
 
 THIS_FOLDER = Path(__file__).resolve().parent
 TWR_POS = []
@@ -100,10 +101,10 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
         predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1] / feet_to_pixel
         predicted_target_pos = [current_target_pos[0],current_target_pos[1]]
 
-        #TEST
-        #pew_direction_degree = pre_intersect_prediction(current_turret_pos,current_target_pos,current_target_vel,current_turret_bullet_speed)
+        
+        pew_direction_degree = pre_intersect_prediction(current_turret_pos,current_target_pos,current_target_vel,current_turret_bullet_speed)
 
-
+    
     
     
 #coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
@@ -123,56 +124,94 @@ def distance(p1, p2):
     return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
 
 def pre_intersect_prediction(pTurret,pTarget,vTarget,bulletVel):
-    #xb0 = Initial Bullet X Position
-    #xt0 = Initial Turret X Position
 
-    #Velocity Data in PIXELS from pygame
+    print("**********************************NEW FRAME**********************************")
+    # #Velocity Data in PIXELS from pygame
     print(f'pTurret:',pTurret)
     print(f'pTarget:',pTarget)
     print(f'vTarget:',vTarget)
     print(f'bulletVel',bulletVel)
+
+    x1=pTurret[0]/4#X position for bullet/turret
+    y1=pTurret[1]/4#Y position for bullet/turret
+    x2=pTarget[0]/4#X position for target
+    y2=pTarget[1]/4#Y position for target
+    vtx=vTarget[0]/4
+    vty=vTarget[1]/4
+    vb=bulletVel
+
+    SHOOT_EARLIER=1
+    # print("HARD CODED UNITS ")
+    # x1=-200
+    # x2=429
+    # y1=100
+    # y2=409
+    # vtx=-100
+    # vb=70
+
+    # print((-2*vtx)*(x2-x1))
+    # print(-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*((x2-x1)**2)+(y2-y1)**2)**0.5)
+    # print((2*vtx*(x2-x1))**2)
+    # print(-4*(vtx**2-vb**2)*(((x2-x1)**2)+(y2-y1)**2))
+
+    t=((-2*vtx)*(x2-x1)-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*(((x2-x1)**2)+(y2-y1)**2))**0.5)/(2*(vtx**2-vb**2))
+    x4=x2+vtx*t*SHOOT_EARLIER
+    theta = math.degrees(math.atan2((y2-y1),(x4-x1)))
     
-    feet_to_pixel=10/40
-    #30 Hertz sim
-    xb0=pTurret[0]
-    xt0=pTarget[0]
-    yb0=pTurret[1]
-    yt0=pTarget[1]
+    print(f't:',t)
+    print(f'x2:',x2)
+    print(f'x1:',x1)
+    print(f'PREDICTION/x4=x2+vtx*t(OG target path):',x4)
+    # print(vb)
+    # print(math.cos(math.radians(theta)))
+    # print(vb*math.cos(math.radians(theta)))
+    print(f'PREDICTION/x4=x1+vb*cos(theta in rad)(OG bullet path)',x1+t*vb*math.cos(math.radians(theta)))
+    print(f'theta:',theta) 
     
-    vtx=vTarget[0]
-    vty=vTarget[1]
 
-    angle = 0
+    return theta
 
-    if vtx != 0:
-        #Basically if the current target is moving horizontally and below
+    # now = datetime.datetime.now()
+    # print("**********************************NEW FRAME**********************************")
+    # print(f'Current Time:',now)
 
-        #Super goofy equation that was derived
-        t=(-2*xt0*vtx-((2*xt0*vtx)**2-4*(vtx**2-bulletVel**2)*(xt0**2+abs(yt0-yb0)**2))**0.5)/(2*(vtx**2-bulletVel**2))
-        xPredict=xt0+vtx*t
-        print(f'vtx:',vtx)
-        print(f'xb0:',xb0)
-        print(f't:',t)
-        print(f'PREDICTION:',xPredict)
-        print(yt0-yb0)
-        angle = math.degrees(math.atan2(abs(yt0-yb0),xPredict))
-        print(f'ANGLE:',angle)
-        print(angle)
-    else:
-        print("HALT")
-#Super goofy equation that was derived
-        t=(-2*xt0*vtx-((2*xt0*vtx)**2-4*(vtx**2-bulletVel**2)*(xt0**2+abs(yt0-yb0)**2))**0.5)/(2*(vtx**2-bulletVel**2))
-        xPredict=xt0+vtx*t
-        print(f'vtx:',vtx)
-        print(f'xb0:',xb0)
-        print(f't:',t)
-        print(f'PREDICTION:',xPredict)
-        print(yt0-yb0)
-        angle = math.degrees(math.atan2(abs(yt0-yb0),xPredict))
-        print(f'ANGLE:',angle)
-        print(angle)
-        #print(angle)
+    # #Velocity Data in PIXELS from pygame
+    # print(f'pTurret:',pTurret)
+    # print(f'pTarget:',pTarget)
+    # print(f'vTarget:',vTarget)
+    # print(f'bulletVel',bulletVel)
+    
+    # feet_to_pixel=10/40
+    # #30 Hertz sim
+    # xb0=pTurret[0]
+    # xt0=pTarget[0]
+    # yb0=pTurret[1]
+    # yt0=pTarget[1]
+    # h=xt0-xb0
+    # print(f'h:',h)
 
-    return angle
+    # vtx=vTarget[0]
+    # vty=vTarget[1]
+
+    # angle = 0
+
+    # if vtx != 0:
+    #     #Basically if the current target is moving horizontally and below
+    #     print(f'vtx:',vtx)
+    #     print(f'xb0:',xb0)
+        
+    #     #Super goofy equation that was derived
+    #     t=(-2*xt0*vtx-((2*xt0*vtx)**2-4*(vtx**2-bulletVel**2)*(xt0**2+abs(yt0-yb0)**2))**0.5)/(2*(vtx**2-bulletVel**2))
+    #     xPredict=xt0+vtx*t
+    #     print(f't:',t)  
+    #     print(f'PREDICTION:',xPredict)
+    #     print(yt0-yb0)
+    #     angle = math.degrees(math.atan2(abs(yt0-yb0),xPredict))
+    #     print(f'ANGLE:',angle)
+    #     print(angle)
+    # else:
+    #     print("HALT")
+
+    #return angle
 
 
