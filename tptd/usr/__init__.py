@@ -71,8 +71,11 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
 
     print(f'tag IS:',tag)
     # Initializing Variables
-    current_turret = 0
+
     current_enemy = 2
+    if tag=='2':
+        print("FIREING AT BACK TARGET BOSS")
+        current_enemy=len(LoT)-1
     pew_direction_degree = 0
     current_turret_bullet_speed = 50
     current_turret_rotation_speed=55
@@ -82,11 +85,11 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     # You need a check here in case there is no elgible enemies in the area
     if len(LoT)>current_enemy:
 
-        current_turret_pos = LoT[int(tag)][1]
+        current_turret_pos = LoT[int(tag)-1][1]
         current_target_pos = LoT[current_enemy][1]
         current_target_vel = LoT[current_enemy][2]
 
-        if LoT[int(tag)][0]=="basic autocannon":
+        if LoT[int(tag)-1][0]=="basic autocannon":
             current_turret_bullet_speed = 70
             current_turret_rotation_speed=300
 
