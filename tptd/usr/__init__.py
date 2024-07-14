@@ -58,17 +58,75 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     
     '''
     current_enemy = 2#Just update this if you add more towers to be exactly the amount of towers on the field
+    enemy_count = len(LoT)-2
 
-    if tag=='2':
-        current_enemy=len(LoT)-1#Basically tell the 2nd tower to always hit last for DPS
+    if enemy_count<1:
+        return (current_dir, True, False)
 
+    if enemy_count < 8:
+        if tag=='2':
+            if LoT[current_enemy][2][1] > 0:
+                return (268 , True, False)
+            else:
+                return (177 , True, False)
+        else:
+            if LoT[current_enemy][2][1] > 0:
+                return (267 , True, False)
+            else:
+                return (174 , True, False)
+    else:
+        if tag=='2':
+            if LoT[current_enemy][2][1] > 0:
+                return (268 , True, False)
+            else:
+                return (current_dir, True, False)
+        else:
+            if LoT[current_enemy][2][1] > 0:
+                return (267 , True, False)
+            else:
+                return (current_dir, True, False)
+    return (current_dir, True, False)
+
+
+
+
+    if enemy_count < 26:
+        if tag=='2':
+            if LoT[current_enemy][2][1] > 0:
+                return (268 , True, False)
+            else:
+                return (177 , True, False)
+        else:
+            if LoT[current_enemy][2][1] > 0:
+                return (267 , True, False)
+            else:
+                return (174 , True, False)
+    else:#If 26/27 (aka when speedy bois spawn)
+        if tag=='2':
+                return (268 , True, False)
+        else:
+                return (267 , True, False)
+
+    return (current_dir, True, False)
     # Some variable initialization for later
     pew_direction_degree = 0
-    current_turret_bullet_speed = 70#basic autocannon is 70
-    current_turret_rotation_speed=300#basic autocannon is 300
 
     # You need a check here in case there is no elgible enemies in the area
     if len(LoT)>current_enemy:
+
+        if tag=='2':
+            #current_enemy=len(LoT)-1#Basically tell the 2nd tower to always hit last for DPS
+            #if LoT[current_enemy][1][1][1]
+            if LoT[current_enemy][2][1] > 0:
+                #print(LoT[current_enemy][2][1])
+                return (268 , True, False)
+
+            return (177 , True, False)
+
+        else:
+            if LoT[current_enemy][2][1] > 0:
+                return (267 , True, False)
+            return (174 , True, False)
 
         # Grabbing the random variables that we need from LoT
         current_turret_pos = LoT[int(tag)-1][1]
