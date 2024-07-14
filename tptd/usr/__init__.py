@@ -4,7 +4,7 @@ from typing     import Tuple
 import numpy as np
 import math
 import datetime
-
+from termcolor import colored
 
 THIS_FOLDER = Path(__file__).resolve().parent
 TWR_POS = []
@@ -69,23 +69,26 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     #Howitzer bullet speed 50
     #Autocannon bullet speed 70
 
+    print(f'tag IS:',tag)
     # Initializing Variables
     current_turret = 0
-    current_enemy = 1
+    current_enemy = 2
     pew_direction_degree = 0
     current_turret_bullet_speed = 50
+    current_turret_rotation_speed=55
     feet_to_pixel=10/40
     distance2pixel = 0
 
     # You need a check here in case there is no elgible enemies in the area
-    if len(LoT)>1:
+    if len(LoT)>current_enemy:
 
-        current_turret_pos = LoT[current_turret][1]
+        current_turret_pos = LoT[int(tag)][1]
         current_target_pos = LoT[current_enemy][1]
         current_target_vel = LoT[current_enemy][2]
 
-        if LoT[current_turret][0]=="basic autocannon":
+        if LoT[int(tag)][0]=="basic autocannon":
             current_turret_bullet_speed = 70
+            current_turret_rotation_speed=300
 
         current_distance = distance(current_target_pos, current_turret_pos)
         current_direction_degree = get_degree(current_target_pos, current_turret_pos)
@@ -104,10 +107,14 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
         
         pew_direction_degree = pre_intersect_prediction(current_turret_pos,current_target_pos,current_target_vel,current_turret_bullet_speed)
 
-    
+    #print(colored('HEY HEY HEY','red'))
     
     
 #coord, tag : str, LoT : list, fire : bool, current_dir : float, target_dir : float
+    if (abs(current_dir-pew_direction_degree) > current_turret_rotation_speed):
+
+        death = str(abs(current_dir-pew_direction_degree))
+        print(colored('MAYDAY MAYDAY MAYDAY MAX GIMBAL LIMIT HIT '+death,'red'))
 
 
     return (pew_direction_degree, True, False)
@@ -142,19 +149,22 @@ def pre_intersect_prediction(pTurret,pTarget,vTarget,bulletVel):
 
     SHOOT_EARLIER=1
     # print("HARD CODED UNITS ")
-    # x1=-200
-    # x2=429
-    # y1=100
+    # x1=-100
+    # x2=322
+    # y1=0
     # y2=409
     # vtx=-100
-    # vb=70
+    # vb=45
 
     # print((-2*vtx)*(x2-x1))
     # print(-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*((x2-x1)**2)+(y2-y1)**2)**0.5)
     # print((2*vtx*(x2-x1))**2)
     # print(-4*(vtx**2-vb**2)*(((x2-x1)**2)+(y2-y1)**2))
+    a=vtx**2-vb**2
+    b=(2*vtx)*(x2-x1)
+    c=((x2-x1)**2)+((y2-y1)**2)
 
-    t=((-2*vtx)*(x2-x1)-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*(((x2-x1)**2)+(y2-y1)**2))**0.5)/(2*(vtx**2-vb**2))
+    t=((-2*vtx)*(x2-x1)-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*(((x2-x1)**2)+((y2-y1)**2)))**0.5)/(2*(vtx**2-vb**2))
     x4=x2+vtx*t*SHOOT_EARLIER
     theta = math.degrees(math.atan2((y2-y1),(x4-x1)))
     
