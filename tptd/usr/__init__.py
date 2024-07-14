@@ -72,9 +72,9 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
     print(f'tag IS:',tag)
     # Initializing Variables
 
-    current_enemy = 2
+    current_enemy = 2#Just update this if you add more towers to be exactly the amount of towers on the field
     if tag=='2':
-        print("FIREING AT BACK TARGET BOSS")
+        print("Going sicko mode")
         current_enemy=len(LoT)-1
     pew_direction_degree = 0
     current_turret_bullet_speed = 50
@@ -89,25 +89,24 @@ def twr_func(coord, tag : str, LoT : list, fire : bool, current_dir : float, tar
         current_target_pos = LoT[current_enemy][1]
         current_target_vel = LoT[current_enemy][2]
 
-        if LoT[int(tag)-1][0]=="basic autocannon":
-            current_turret_bullet_speed = 70
-            current_turret_rotation_speed=300
+        if LoT[int(tag)-1][0]=="basic autocannon":#howitzer
+            current_turret_bullet_speed = 70#howitzer is 50
+            current_turret_rotation_speed=300#howitzer is 55
 
         current_distance = distance(current_target_pos, current_turret_pos)
         current_direction_degree = get_degree(current_target_pos, current_turret_pos)
 
-        pew_direction_degree = get_degree(current_target_pos, current_turret_pos)
+        # pew_direction_degree = get_degree(current_target_pos, current_turret_pos)
 
-        #Maybe change to something more accurate in the future
-        estimated_distance_time = current_distance / current_turret_bullet_speed
+        # #Maybe change to something more accurate in the future
+        # estimated_distance_time = current_distance / current_turret_bullet_speed
 
         # We gotta do some funky math here boss
         # What we know = turret position, turret velocity(0),arget position, target velocity
-        predicted_target_pos_x = current_target_pos[0] + estimated_distance_time * current_target_vel[0] / feet_to_pixel
-        predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1] / feet_to_pixel
-        predicted_target_pos = [current_target_pos[0],current_target_pos[1]]
+        # predicted_target_pos_x = current_target_pos[0] + estimated_distance_time * current_target_vel[0] / feet_to_pixel
+        # predicted_target_pos_y = current_target_pos[1] + estimated_distance_time * current_target_vel[1] / feet_to_pixel
+        # predicted_target_pos = [current_target_pos[0],current_target_pos[1]]
 
-        
         pew_direction_degree = pre_intersect_prediction(current_turret_pos,current_target_pos,current_target_vel,current_turret_bullet_speed)
 
     #print(colored('HEY HEY HEY','red'))
@@ -149,8 +148,9 @@ def pre_intersect_prediction(pTurret,pTarget,vTarget,bulletVel):
     vtx=vTarget[0]/4
     vty=vTarget[1]/4
     vb=bulletVel
+    theta = 0
 
-    SHOOT_EARLIER=1
+    shootEarlier=1
     # print("HARD CODED UNITS ")
     # x1=-100
     # x2=322
@@ -163,25 +163,73 @@ def pre_intersect_prediction(pTurret,pTarget,vTarget,bulletVel):
     # print(-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*((x2-x1)**2)+(y2-y1)**2)**0.5)
     # print((2*vtx*(x2-x1))**2)
     # print(-4*(vtx**2-vb**2)*(((x2-x1)**2)+(y2-y1)**2))
-    a=vtx**2-vb**2
-    b=(2*vtx)*(x2-x1)
-    c=((x2-x1)**2)+((y2-y1)**2)
+    if vtx !=0:
+        # If the target has a x velocity
+        if vtx > 0:
+            print("")
+        else:
+            if x1 < x2 :#Basically if the target is to the right of the turret
+                if y2==409/4:#Basically if you are on the first line path
+                    shootEarlier=1
+                    print("BOT")
+                else:
+                    print("")
+                    shootEarlier=1
+            else:
+                print("")
+        print("EEEEEEEEEEEEEEEEE")
+        a=vtx**2-vb**2
+        b=(2*vtx)*(x2-x1)
+        c=((x2-x1)**2)+((y2-y1)**2)
 
-    t=((-2*vtx)*(x2-x1)-((2*vtx*(x2-x1))**2-4*(vtx**2-vb**2)*(((x2-x1)**2)+((y2-y1)**2)))**0.5)/(2*(vtx**2-vb**2))
-    x4=x2+vtx*t*SHOOT_EARLIER
-    theta = math.degrees(math.atan2((y2-y1),(x4-x1)))
-    
-    print(f't:',t)
-    print(f'x2:',x2)
-    print(f'x1:',x1)
-    print(f'PREDICTION/x4=x2+vtx*t(OG target path):',x4)
-    # print(vb)
-    # print(math.cos(math.radians(theta)))
-    # print(vb*math.cos(math.radians(theta)))
-    print(f'PREDICTION/x4=x1+vb*cos(theta in rad)(OG bullet path)',x1+t*vb*math.cos(math.radians(theta)))
-    print(f'theta:',theta) 
-    
+        t=(-b-((b)**2-4*(a)*(c))**0.5)/(2*(a))
+        x4=x2+vtx*t*shootEarlier
+        theta = math.degrees(math.atan2((y2-y1),(x4-x1)))
+        
+        # print("TARGET MOVING IN THE X DIRECTION")
+        # print(f't:',t)
+        # print(f'x2:',x2)
+        # print(f'x1:',x1)
+        # print(f'PREDICTION/x4=x2+vtx*t(OG target path):',x4)
+        # print(f'PREDICTION/x4=x1+vb*cos(theta in rad)(OG bullet path)',x1+t*vb*math.cos(math.radians(theta)))
+        # print(f'theta:',theta) 
 
+    else:
+        # If the target has a y velocity
+        if vty > 0:
+            print("")
+        else:
+            if y1 < y2 :#Basically if the target is to the below of the turret(yaxis is reversed)
+                if y2==409/4:#Basically if you are on the first line path
+                    shootEarlier=1
+                    print("")
+                else:
+                    print("")
+                    shootEarlier=1
+            else:
+                print("")
+
+        a=vty**2-vb**2
+        b=(2*vty)*(y2-y1)
+        c=((y2-y1)**2)+((x2-x1)**2)
+
+        t=(-b-((b)**2-4*(a)*(c))**0.5)/(2*(a))
+        y4=y2+vty*t*shootEarlier
+        theta = 90-math.degrees(math.atan2((x2-x1),(y4-y1)))
+
+        
+        print("TARGET MOVING IN THE Y DIRECTION")
+        print(f't:',t)
+        print(f'y2:',y2)
+        print(f'y1:',y1)
+        print(f'PREDICTION/x4=x2+vtx*t(OG target path):',y4)
+        print(f'PREDICTION/x4=x1+vb*cos(theta in rad)(OG bullet path)',y1+t*vb*math.sin(math.radians(theta)))
+        print(f'theta:',theta) 
+
+
+
+    
+    
     return theta
 
     # now = datetime.datetime.now()
